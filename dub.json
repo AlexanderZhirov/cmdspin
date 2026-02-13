@@ -1,0 +1,14 @@
+{
+	"name": "cmdspin",
+	"description": "Small D library for running external commands with a terminal spinner.",
+	"license": "BSL-1.0",
+	"authors": [
+		"Alexander Zhirov"
+	],
+	"copyright": "Copyright © 2026, Alexander Zhirov",
+	"targetType": "library",
+	"targetPath": "lib",
+	"subPackages": [
+		"example"
+	]
+}

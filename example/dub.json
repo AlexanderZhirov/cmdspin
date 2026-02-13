@@ -1,0 +1,11 @@
+{
+	"name": "example",
+	"targetType": "executable",
+	"targetName": "example",
+	"targetPath": "../bin",
+	"dependencies": {
+		"cmdspin": {
+			"path": ".."
+		}
+	}
+}
