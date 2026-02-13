@@ -11,7 +11,7 @@ Two execution styles:
 ```json
 {
 	"dependencies": {
-		"cmdspin": "~>0.1.0"
+		"cmdspin": "~>0.1.1"
 	}
 }
 ```
