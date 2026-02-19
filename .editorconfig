@@ -1,0 +1,88 @@
+# =========================
+# EditorConfig (корень)
+# =========================
+
+# Этот файл — корневой. Файлы .editorconfig выше по дереву НЕ учитываются.
+root = true
+
+[*]
+# Вставлять перевод строки в конце файла
+insert_final_newline = true
+
+[*.{d,json}]
+
+# Кодировка файла
+charset = utf-8
+
+# Удалять пробелы/табы в конце строк при сохранении
+trim_trailing_whitespace = true
+
+# Отступы табами
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+# "Общий" лимит длины строки (для редактора/линеек/части инструментов)
+max_line_length = 120
+
+
+# =========================
+# dfmt форматирование
+# (эти параметры читает dfmt)
+# =========================
+
+# Стиль фигурных скобок: allman / otbs / stroustrup / knr
+dfmt_brace_style = knr
+
+# "Мягкий" лимит для dfmt: обычно старается держать строки <= этого значения,
+# но в крайнем случае может раздувать строку до max_line_length
+dfmt_soft_max_line_length = 80
+
+# Выравнивать label/case/default по уровню switch
+dfmt_align_switch_statements = true
+
+# Уменьшать отступ у атрибутов (помечено как "Not yet implemented" — может игнорироваться)
+dfmt_outdent_attributes = true
+
+# При переносах ставить оператор в конце предыдущей строки
+# true  -> оператор в конце предыдущей строки
+# false -> оператор уходит в начало новой строки (поведение по умолчанию)
+dfmt_split_operator_at_line_end = false
+
+# Пробел после cast(...) перед выражением: cast(int) x
+dfmt_space_after_cast = true
+
+# Пробел после ключевых слов перед "(" : if (x), while (x), foreach (x; xs)
+# (у тебя в списке этот ключ повторяется — в конфиге он должен быть один раз)
+dfmt_space_after_keywords = true
+
+# Пробел перед "(" в параметрах функции: foo (a, b)
+dfmt_space_before_function_parameters = false
+
+# Пробел в selective import перед ":" : import std.stdio : writeln;
+dfmt_selective_import_space = true
+
+# Метка на той же строке, что и оператор: label: while (...) { ... }
+dfmt_compact_labeled_statements = true
+
+# Стиль форматирования template constraints:
+# conditional_newline_indent / conditional_newline / always_newline / always_newline_indent
+dfmt_template_constraint_style = conditional_newline_indent
+
+# Если constraint перенесён (в стилях *_indent): отступ 1 таб вместо 2
+dfmt_single_template_constraint_indent = false
+
+# Пробел перед ":" в AA литералах (старый стиль): ["k" : 1]
+dfmt_space_before_aa_colon = true
+
+# Пробел перед ":" у именованных аргументов: foo(name : "x")
+dfmt_space_before_named_arg_colon = false
+
+# Сохранять существующие переводы строк, если они не нарушают правила форматирования
+dfmt_keep_line_breaks = false
+
+# Внутри скобок/многострочных выражений — один таб вместо двух
+dfmt_single_indent = false
+
+# Пересчитывать переносы в цепочках вызовов/свойств (property chains)
+dfmt_reflow_property_chains = true

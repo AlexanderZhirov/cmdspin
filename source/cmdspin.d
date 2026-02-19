@@ -1,4 +1,4 @@
-// Small D library for running external commands with a terminal spinner v0.1.1;
+// Small D library for running external commands with a terminal spinner v0.1.2;
 module cmdspin;
 
 import std.process : pipeProcess, ProcessPipes, Redirect, wait, execute, kill, tryWait;
@@ -25,33 +25,36 @@ public void cmdspinHideCursor() @nogc nothrow @trusted
 	posixWrite(STDERR_FILENO, cast(const(void)*) CURSOR_HIDE.ptr, CURSOR_HIDE.length);
 }
 
-private class CmdSpinBase
-{
+enum EXIT_TYPE : int {
+	EXIT_CODE,
+	RETURNING_RESULT
+}
+
+private class CmdSpinBase {
 protected:
 	Tid _spawnedTid;
 	Exception _error;
 	int _exitCode;
+	EXIT_TYPE _type = EXIT_TYPE.EXIT_CODE;
 
-	struct SpinnerMessage
-	{
+	struct SpinnerMessage {
 		bool ln;
 		string text;
 	}
 
-	struct StopSpinner
-	{
+	struct StopSpinner {
 		bool stop;
 		int exitCode;
+		bool resultProcess;
 	}
 
-	static void spinner(Tid tid, string preMessage, string postMessage, string errorMessage)
+	static void spinner(Tid tid, string preMessage, string postMessage,
+			string errorMessage, EXIT_TYPE type)
 	{
 		immutable dchar[] animationUTF = [
 			'⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'
 		];
-		immutable dchar[] animationASCII = [
-			'-', '\\', '|', '/'
-		];
+		immutable dchar[] animationASCII = ['-', '\\', '|', '/'];
 
 		auto tn = ttyname(0);
 		auto ttyName = tn ? tn.fromStringz.idup : string.init;
@@ -63,36 +66,36 @@ protected:
 		cmdspinHideCursor();
 
 		bool result = true;
-		int resultExitCode;
+		int exitCode;
+		bool exitProcess;
 
-		while (result)
-		{
+		while (result) {
 			writef("\r\x1b[K[%c] %s", animation[i], spinnerText);
 			i = (i + 1) % animation.length;
 
-			receiveTimeout(dur!("msecs")(100),
-				(SpinnerMessage msg) {
-					if (msg.ln)
-						writef("\r%s\n", msg.text);
-					else
-						spinnerText = msg.text;
-				},
-				(StopSpinner ss) {
-					if (ss.stop) {
-						resultExitCode = ss.exitCode;
-						result = false;
-					}
+			receiveTimeout(dur!("msecs")(100), (SpinnerMessage msg) {
+				if (msg.ln)
+					writef("\r%s\n", msg.text);
+				else
+					spinnerText = msg.text;
+			}, (StopSpinner ss) {
+				if (ss.stop) {
+					exitCode = ss.exitCode;
+					exitProcess = ss.resultProcess;
+					result = false;
 				}
-			);
+			});
 
 			stdout.flush();
 		}
 
-		string endMessage = resultExitCode == 0 ? postMessage : errorMessage;
+		bool resutlExit = (type == EXIT_TYPE.EXIT_CODE) ? (exitCode == 0) : exitProcess;
+
+		string endMessage = resutlExit ? postMessage : errorMessage;
 
 		cmdspinShowCursor();
 
-		write(endMessage.length ? "[%c] %s\n".format(resultExitCode == 0 ? '#' : '!', endMessage)
+		write(endMessage.length ? "[%c] %s\n".format(resutlExit ? '#' : '!', endMessage)
 				: string.init);
 
 		send(tid, true);
@@ -128,10 +131,14 @@ public:
 	{
 		send(_spawnedTid, SpinnerMessage(true, str));
 	}
+
+	final void setExitType(EXIT_TYPE type)
+	{
+		_type = type;
+	}
 }
 
-class CmdSpinPipes : CmdSpinBase
-{
+class CmdSpinPipes : CmdSpinBase {
 private:
 	ProcessPipes pipes;
 
@@ -142,30 +149,25 @@ public:
 			pipes.pid.kill(SIGTERM);
 	}
 
-	final bool command(
-		string[] cmd,
-		bool delegate(File pout, File perr) process,
-		string startMessage = string.init,
-		string stopMessage = string.init,
-		string errorMessage = string.init
-	)
+	final bool command(string[] cmd, bool delegate(File pout, File perr) process,
+			string startMessage = string.init, string stopMessage = string.init,
+			string errorMessage = string.init)
 	{
-		_spawnedTid = spawn(&spinner, thisTid, startMessage, stopMessage, errorMessage);
+		_spawnedTid = spawn(&spinner, thisTid, startMessage, stopMessage, errorMessage, _type);
 
-		scope (exit)
-		{
+		bool resultProcess = true;
+
+		scope (exit) {
 			_exitCode = wait(pipes.pid);
-			send(_spawnedTid, StopSpinner(true, _exitCode));
+			send(_spawnedTid, StopSpinner(true, _exitCode, resultProcess));
 			receive((bool done) {});
 		}
 
-		try
-		{
+		try {
 			pipes = pipeProcess(cmd, Redirect.stdout | Redirect.stderr);
-			return process(pipes.stdout, pipes.stderr);
-		}
-		catch (Exception e)
-		{
+			resultProcess = process(pipes.stdout, pipes.stderr);
+			return resultProcess;
+		} catch (Exception e) {
 			_error = e;
 			_exitCode = 1;
 			return false;
@@ -173,32 +175,26 @@ public:
 	}
 }
 
-class CmdSpinExec : CmdSpinBase
-{
-	final bool command(
-		string[] cmd,
-		bool delegate(int status, string output) process,
-		string startMessage = string.init,
-		string stopMessage = string.init,
-		string errorMessage = string.init
-	)
+class CmdSpinExec : CmdSpinBase {
+	final bool command(string[] cmd, bool delegate(int status, string output) process,
+			string startMessage = string.init, string stopMessage = string.init,
+			string errorMessage = string.init)
 	{
-		_spawnedTid = spawn(&spinner, thisTid, startMessage, stopMessage, errorMessage);
+		_spawnedTid = spawn(&spinner, thisTid, startMessage, stopMessage, errorMessage, _type);
 
-		scope (exit)
-		{
-			send(_spawnedTid, StopSpinner(true, _exitCode));
+		bool resultProcess = true;
+
+		scope (exit) {
+			send(_spawnedTid, StopSpinner(true, _exitCode, resultProcess));
 			receive((bool done) {});
 		}
 
-		try
-		{
+		try {
 			auto result = execute(cmd);
 			_exitCode = result.status;
-			return process(result.status, result.output);
-		}
-		catch (Exception e)
-		{
+			resultProcess = process(result.status, result.output);
+			return resultProcess;
+		} catch (Exception e) {
 			_error = e;
 			_exitCode = 1;
 			return false;

@@ -1,5 +1,21 @@
 {
-	"editor.insertSpaces": false,
-	"editor.tabSize": 4,
-	"editor.detectIndentation": false
+	"advancedLocalFormatters.formatters": [
+		{
+			"command": [
+				"dfmt"
+			],
+			"languages": [
+				"d"
+			]
+		}
+	],
+	"[d]": {
+		"editor.defaultFormatter": "webfreak.advanced-local-formatters",
+		"editor.formatOnSave": true,
+		"editor.formatOnSaveMode": "file"
+	},
+	"editor.rulers": [
+		80,
+		120
+	]
 }

@@ -35,6 +35,8 @@ public:
 	// Executes "ping" and streams its stdout line-by-line.
 	bool exec()
 	{
+		setExitType(EXIT_TYPE.RETURNING_RESULT);
+
 		return command(
 			// External command to run:
 			// ping -c <count> <ip>
@@ -95,6 +97,9 @@ public:
 	// Executes "hostnamectl status" and captures all output at once.
 	bool exec()
 	{
+		// Default
+		setExitType(EXIT_TYPE.EXIT_CODE);
+
 		return command(
 			["hostnamectl", "status"],
 
