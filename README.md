@@ -2,6 +2,8 @@
 
 Small D library for running external commands with a terminal spinner.
 
+[![asciicast](https://asciinema.org/a/791817.svg)](https://asciinema.org/a/791817)
+
 Two execution styles:
 - **CmdSpinExecute** — run a command and handle `(status, output)` (captured output).
 - **CmdSpinPipes** — run a command and handle `(stdout, stderr)` as streams.
