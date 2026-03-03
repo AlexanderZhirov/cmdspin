@@ -13,7 +13,7 @@ Two execution styles:
 ```json
 {
 	"dependencies": {
-		"cmdspin": "~>0.1.1"
+		"cmdspin": "~>0.1.3"
 	}
 }
 ```
