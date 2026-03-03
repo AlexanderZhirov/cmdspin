@@ -1,4 +1,4 @@
-// Small D library for running external commands with a terminal spinner v0.1.2;
+// Small D library for running external commands with a terminal spinner v0.1.3;
 module cmdspin;
 
 import std.process : pipeProcess, ProcessPipes, Redirect, wait, execute, kill, tryWait;
@@ -176,7 +176,7 @@ public:
 }
 
 class CmdSpinExec : CmdSpinBase {
-	final bool command(string[] cmd, bool delegate(int status, string output) process,
+	final bool command(string[] cmd, bool delegate(int status, string output) process = null,
 			string startMessage = string.init, string stopMessage = string.init,
 			string errorMessage = string.init)
 	{
@@ -192,7 +192,7 @@ class CmdSpinExec : CmdSpinBase {
 		try {
 			auto result = execute(cmd);
 			_exitCode = result.status;
-			resultProcess = process(result.status, result.output);
+			resultProcess = process is null ? _exitCode == 0 : process(result.status, result.output);
 			return resultProcess;
 		} catch (Exception e) {
 			_error = e;
